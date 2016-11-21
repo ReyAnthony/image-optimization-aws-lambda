@@ -1,6 +1,7 @@
 package com.mutum.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
@@ -21,10 +22,17 @@ public class Handler {
 
     public void handle(S3Event s3Event, Context context) throws IOException{
 
+        final LambdaLogger logger = context.getLogger();
+
         final String OUTPUT_BUCKET = getenv("OUTPUT_BUCKET");
         final String OUTPUT_PATH = getenv("OUTPUT_PATH_IN_BUCKET");
         final double QUALITY = Double.parseDouble(getenv("QUALITY"));
         final String FILE_EXT = getenv("FILE_EXT");
+
+        logger.log("OUPUT_BUCKET : " + OUTPUT_BUCKET);
+        logger.log("OUTPUT_PATH : " + OUTPUT_PATH);
+        logger.log("QUALITY : " + QUALITY);
+        logger.log("FILE_EXT : " + FILE_EXT);
 
         final List<S3EventNotificationRecord> records = s3Event.getRecords();
         final AmazonS3Client client = new AmazonS3Client();
@@ -55,6 +63,9 @@ public class Handler {
                 client.putObject(OUTPUT_BUCKET,
                                  OUTPUT_PATH + outputFilename + "." + FILE_EXT,
                                  outputFile);
+
+                logger.log("Processed " + outputFilename + "." + FILE_EXT);
+                logger.log("It was saved in the bucket " + OUTPUT_BUCKET + " at path : " + OUTPUT_PATH);
             }
         }
     }
