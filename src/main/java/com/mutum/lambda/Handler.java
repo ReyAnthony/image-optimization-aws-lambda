@@ -28,9 +28,13 @@ public class Handler {
         final String OUTPUT_PATH = getenv("OUTPUT_PATH_IN_BUCKET");
         final double QUALITY = Double.parseDouble(getenv("QUALITY"));
         final String FILE_EXT = getenv("FILE_EXT");
+        final int RESIZED_WIDTH = Integer.parseInt(getenv("RESIZED_WIDTH"));
+        final int RESIZED_HEIGHT = Integer.parseInt(getenv("RESIZED_HEIGHT"));
 
         logger.log("OUPUT_BUCKET : " + OUTPUT_BUCKET);
         logger.log("OUTPUT_PATH : " + OUTPUT_PATH);
+        logger.log("RESIZED_WIDTH : " + RESIZED_WIDTH);
+        logger.log("RESIZED_HEIGHT : " + RESIZED_HEIGHT);
         logger.log("QUALITY : " + QUALITY);
         logger.log("FILE_EXT : " + FILE_EXT);
 
@@ -55,9 +59,10 @@ public class Handler {
                 try(InputStream is = s3Object.getObjectContent()) {
 
                     Thumbnails.of(is)
-                            .size(500, 500)
+                            .size(RESIZED_WIDTH, RESIZED_HEIGHT)
                             .outputQuality(QUALITY)
-                            .outputFormat(FILE_EXT).toFile(outputFile);
+                            .outputFormat(FILE_EXT)
+                            .toFile(outputFile);
                 }
 
                 client.putObject(OUTPUT_BUCKET,
