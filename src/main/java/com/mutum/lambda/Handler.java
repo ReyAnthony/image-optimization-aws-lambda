@@ -7,11 +7,14 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRecord;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.http.entity.ContentType;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -30,6 +33,7 @@ public class Handler {
         final String FILE_EXT = getenv("FILE_EXT");
         final int RESIZED_WIDTH = Integer.parseInt(getenv("RESIZED_WIDTH"));
         final int RESIZED_HEIGHT = Integer.parseInt(getenv("RESIZED_HEIGHT"));
+        final String CONTENT_TYPE = getenv("CONTENT_TYPE");
 
         logger.log("OUPUT_BUCKET : " + OUTPUT_BUCKET);
         logger.log("OUTPUT_PATH : " + OUTPUT_PATH);
@@ -53,21 +57,29 @@ public class Handler {
                                             s3Entity.getObject().getKey()));
 
                 String outputFilename = FilenameUtils.getBaseName(s3Entity.getObject().getKey());
-                //TODO We must do this in memory to gain time
-                File outputFile = new File("/tmp/" + outputFilename + "." + FILE_EXT);
 
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 try(InputStream is = s3Object.getObjectContent()) {
 
                     Thumbnails.of(is)
                             .size(RESIZED_WIDTH, RESIZED_HEIGHT)
                             .outputQuality(QUALITY)
                             .outputFormat(FILE_EXT)
-                            .toFile(outputFile);
+                            .toOutputStream(baos);
                 }
 
-                client.putObject(OUTPUT_BUCKET,
-                                 OUTPUT_PATH + outputFilename + "." + FILE_EXT,
-                                 outputFile);
+                byte[] baosBytes = baos.toByteArray();
+                try(InputStream is = new ByteArrayInputStream(baosBytes)) {
+
+                    ObjectMetadata objectMetadata = new ObjectMetadata();
+                    objectMetadata.setContentLength(baosBytes.length);
+                    objectMetadata.setContentType(CONTENT_TYPE);
+
+                    client.putObject(OUTPUT_BUCKET,
+                            OUTPUT_PATH + outputFilename + "." + FILE_EXT,
+                            is,
+                            objectMetadata);
+                }
 
                 logger.log("Processed " + outputFilename + "." + FILE_EXT);
                 logger.log("It was saved in the bucket " + OUTPUT_BUCKET + " at path : " + OUTPUT_PATH);
