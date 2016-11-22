@@ -1,18 +1,26 @@
 package com.mutum.lambda;
 
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRecord;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.SetObjectAclRequest;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
+import static com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead;
 import static java.lang.System.getenv;
 
 public class Handler {
@@ -89,6 +97,11 @@ public class Handler {
                 }
 
                 logger.log("Processed " + savedFileKey);
+
+                logger.log("Setting " + savedFileKey + " rights");
+                client.setObjectAcl(new SetObjectAclRequest(OUTPUT_BUCKET, savedFileKey, PublicRead));
+                logger.log("Right were given to : " + savedFileKey);
+
             }
         }
     }
