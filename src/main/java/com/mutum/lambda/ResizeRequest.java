@@ -1,14 +1,12 @@
 package com.mutum.lambda;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Builder
 @Getter
 @Setter
-@ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class ResizeRequest {
 
     private String outputBucket;
@@ -22,4 +20,7 @@ public class ResizeRequest {
     private String inputBucket;
     private String inputObjectKey;
 
+    public String toString() {
+        return "com.mutum.lambda.ResizeRequest(outputBucket=" + this.getOutputBucket() + ", outputPath=" + this.getOutputPath() + ", quality=" + this.getQuality() + ", fileExtension=" + this.getFileExtension() + ", resizedWidth=" + this.getResizedWidth() + ", resizedHeight=" + this.getResizedHeight() + ", contentType=" + this.getContentType() + ", inputBucket=" + this.getInputBucket() + ", inputObjectKey=" + this.getInputObjectKey() + ")";
+    }
 }
