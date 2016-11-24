@@ -40,3 +40,23 @@ Expected IAM policy :
     ]
 }
 ```
+
+Two events are supported : 
+- S3Event, the lambda has to be configured by env variables directly in the lambda conf
+- ResizeRequest has this format : 
+
+
+``` 
+{
+  "inputBucket": "alpha-images",
+  "inputObjectKey": "uploads/mutum-logo.png",
+ 
+  "outputBucket": "alpha-images",
+  "outputPath": "uploads",
+  "quality": "0.7",
+  "fileExtension": "jpg",
+  "resizedWidth": "500",
+  "resizedHeight": "500",
+  "contentType": "image/jpeg"
+} 
+```
