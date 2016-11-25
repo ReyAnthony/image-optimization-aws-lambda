@@ -22,7 +22,6 @@ abstract class AbstractHandler<T,U> implements RequestHandler<T,U> {
     private static final String ALREADY_RESIZED_KEY = "resized-and-compressed";
     protected static LambdaLogger logger;
 
-
     protected byte[] resize(S3Object imageToResize, ResizeRequest req) throws IOException, AlreadyResizedException {
 
         logger.log("Starting conversion of : " + req.getInputObjectKey());
@@ -44,7 +43,7 @@ abstract class AbstractHandler<T,U> implements RequestHandler<T,U> {
         return baos.toByteArray();
     }
 
-    protected void uploadNewFileToS3(byte[] imageBytes, ResizeRequest req, AmazonS3Client client) throws IOException {
+    protected String uploadNewFileToS3(byte[] imageBytes, ResizeRequest req, AmazonS3Client client) throws IOException {
 
         final String s3ObjectKey = req.getInputObjectKey();
         final String outputFilename = FilenameUtils.getBaseName(s3ObjectKey);
@@ -64,6 +63,7 @@ abstract class AbstractHandler<T,U> implements RequestHandler<T,U> {
 
         logger.log("Processed " + savedFileKey);
         addPublicReadRights(client, req, savedFileKey);
+        return client.getResourceUrl(req.getOutputBucket(), savedFileKey);
     }
 
     private void addPublicReadRights(AmazonS3Client client, ResizeRequest req, String savedFileKey){

@@ -8,27 +8,35 @@ import com.mutum.lambda.exceptions.AlreadyResizedException;
 
 import java.io.IOException;
 
-public class ResizeRequestHandler extends AbstractHandler<ResizeRequest, Boolean> {
+public class ResizeRequestHandler extends AbstractHandler<ResizeRequest, ResizeAnswer> {
 
     @Override
-    public Boolean handleRequest(ResizeRequest req, Context context) {
+    public ResizeAnswer handleRequest(ResizeRequest req, Context context) {
 
         logger = context.getLogger();
         logger.log(req.toString());
 
         final AmazonS3Client client = new AmazonS3Client();
         S3Object s3Object = client.getObject(new GetObjectRequest(req.getInputBucket(), req.getInputObjectKey()));
+        String savedUrl;
 
         try {
 
             byte[] resizedImageBytes = resize(s3Object, req);
-            uploadNewFileToS3(resizedImageBytes, req, client);
+            savedUrl = uploadNewFileToS3(resizedImageBytes, req, client);
 
         } catch (IOException | AlreadyResizedException e) {
             logger.log(e.getMessage());
-            return false;
+            return ResizeAnswer
+                    .builder()
+                    .success(false)
+                    .build();
         }
 
-        return true;
+        return ResizeAnswer
+                .builder()
+                .success(true)
+                .url(savedUrl)
+                .build();
     }
 }
